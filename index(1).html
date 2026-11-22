@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tagwerk">
+<meta name="theme-color" content="#5b4bff">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Tagwerk</title>
+<style>
+:root{--bg:#f4f3ff;--card:#fff;--tx:#1d1b32;--mut:#7a7894;--ac:#5b4bff;--ac2:#ff6b9d;--ok:#2fbf8f;--warn:#ff6b4a;--line:#e6e4f7}
+@media(prefers-color-scheme:dark){:root{--bg:#12111f;--card:#1e1c33;--tx:#f2f1ff;--mut:#9a98b8;--line:#2d2a4a}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px -apple-system,system-ui,sans-serif;padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+header{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;padding:calc(env(safe-area-inset-top) + 22px) 20px 28px;border-radius:0 0 28px 28px}
+header small{opacity:.85;text-transform:uppercase;letter-spacing:.08em;font-size:12px}
+header h1{margin:4px 0 14px;font-size:30px}
+.bar{height:8px;background:rgba(255,255,255,.3);border-radius:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:#fff;border-radius:8px;transition:width .4s}
+.sub{margin-top:8px;font-size:14px;opacity:.9}
+main{padding:8px 16px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin:22px 4px 8px}
+h2.late{color:var(--warn)}
+.card{background:var(--card);border-radius:18px;padding:14px;margin-bottom:10px;display:flex;gap:10px;align-items:center;box-shadow:0 2px 10px rgba(60,40,180,.08)}
+.chk{flex:none;width:28px;height:28px;border-radius:50%;border:2.5px solid var(--ac);background:none;color:#fff;font-size:16px;padding:0}
+.done{opacity:.45}.done .chk{background:var(--ok);border-color:var(--ok)}.done .t{text-decoration:line-through}
+.body{flex:1;min-width:0}.t{font-weight:600;overflow-wrap:anywhere}
+.m{font-size:13px;color:var(--mut);margin-top:3px}.m.w{color:var(--warn);font-weight:700}.m.g{color:var(--ok);font-weight:700}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--line);color:var(--ac);margin-right:6px}
+.tag.f{background:#ffe3ee;color:#d6336c}
+.ico{flex:none;background:none;border:0;font-size:20px;padding:6px}
+.empty{text-align:center;color:var(--mut);padding:40px 10px}
+.chips{display:flex;gap:8px;margin-top:14px}
+.chip{border:1.5px solid var(--ac);background:none;color:var(--ac);border-radius:20px;padding:7px 14px;font:600 14px inherit}
+.chip.on{background:var(--ac);color:#fff}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);padding:8px 4px calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+nav .tab{flex:1;background:none;border:0;color:var(--mut);font-size:11px;font-weight:600;padding:4px 0}
+nav .tab b{display:block;font-size:20px;font-weight:400}nav .on{color:var(--ac)}
+.fab{position:fixed;right:18px;bottom:calc(84px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;border:0;font-size:32px;color:#fff;background:linear-gradient(135deg,var(--ac),var(--ac2));box-shadow:0 6px 18px rgba(91,75,255,.5);z-index:5}
+#sheet{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;z-index:9}
+#sheet.open{display:flex}
+form{background:var(--card);width:100%;max-height:92vh;overflow:auto;border-radius:26px 26px 0 0;padding:20px 20px calc(24px + env(safe-area-inset-bottom));display:grid;gap:12px}
+input,textarea,select,button.go{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;width:100%}
+form small{color:var(--mut);margin-bottom:-6px}
+.seg{display:flex;background:var(--bg);border-radius:12px;padding:4px}
+.seg label{flex:1;text-align:center;padding:9px;border-radius:9px;font-weight:600;color:var(--mut)}
+.seg input{display:none}.seg label:has(input:checked){background:var(--ac);color:#fff}
+.row{display:flex;gap:10px}.row>*{flex:1}.grid{display:grid;gap:12px}
+.fl{display:flex;gap:8px;align-items:center;font-size:14px}.fl input{width:auto}
+button.go{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;border:0;font-weight:700}
+</style></head><body>
+<header><small id="dt"></small><h1 id="hi"></h1><div class="bar"><i id="pg"></i></div><div class="sub" id="ps"></div></header>
+<main id="main"></main>
+<button class="fab" id="add">+</button>
+<nav><button class="tab on" data-t="heute"><b>🏠</b>Heute</button><button class="tab" data-t="alle"><b>🗓</b>Alle</button><button class="tab" data-t="aufgaben"><b>✅</b>Aufgaben</button><button class="tab" data-t="termine"><b>📌</b>Termine</button><button class="tab" data-t="routinen"><b>🔁</b>Routinen</button></nav>
+<div id="sheet"><form id="f">
+<div class="seg"><label><input type="radio" name="type" value="event" checked><span>Termin</span></label><label><input type="radio" name="type" value="todo"><span>Aufgabe</span></label><label><input type="radio" name="type" value="routine"><span>Routine</span></label></div>
+<input name="title" placeholder="Titel" required>
+<small id="dl">Datum</small>
+<div class="row"><input type="date" name="date" required><input type="time" name="time" id="tm"></div>
+<label class="fl" id="flx" hidden><input type="checkbox" name="flex">Keine feste Frist – das ist meine persönliche Deadline</label>
+<div id="rp" class="grid"><small>Wiederholung</small>
+<select name="ru"><option value="">Einmalig</option><option value="d">Wiederholen alle … Tage</option><option value="w">Wiederholen alle … Wochen</option><option value="m">Wiederholen alle … Monate</option></select>
+<div id="rx" hidden class="row"><input type="number" name="n" min="1" value="1" title="Intervall"><input type="date" name="until" title="Wiederholen bis (optional)"></div>
+<small id="rxh" hidden>Zahl = Intervall · Datum = Wiederholen bis (leer = ohne Ende)</small></div>
+<div id="rt" hidden class="grid"><small>Soll wieder fällig sein nach</small><div class="row"><input type="number" name="n2" min="1" value="2"><select name="u2"><option value="d">Tagen</option><option value="w" selected>Wochen</option><option value="m">Monaten</option></select></div></div>
+<textarea name="note" id="nt" rows="2" placeholder="Notiz (optional)"></textarea>
+<button class="go">Speichern</button></form></div>
+<script>
+const $=s=>document.querySelector(s),UN={d:'Tage',w:'Wochen',m:'Monate'};
+const ld=k=>{try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(e){return[]}};
+let items=ld('tw'),rts=ld('tw_r'),tab='heute',only=false,T='';
+const iso=d=>new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const save=()=>{try{localStorage.setItem('tw',JSON.stringify(items));localStorage.setItem('tw_r',JSON.stringify(rts))}catch(e){}render()};
+const add=(s,k,u)=>{const d=new Date(s+'T12:00');u=='m'?d.setMonth(d.getMonth()+k):d.setDate(d.getDate()+k*(u=='w'?7:1));return iso(d)};
+const days=(a,b)=>Math.round((new Date(a+'T12:00')-new Date(b+'T12:00'))/864e5);
+const fmt=d=>new Date(d+'T12:00').toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'short'});
+const lbl=d=>{const x=days(d,T);return x==0?'Heute':x==1?'Morgen':fmt(d)};
+const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sort=(a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||''));
+function inst(lo,hi){const o=[];for(const i of items){
+  if(!i.rep){o.push({...i});continue}
+  for(let k=0;k<500;k++){const d=add(i.date,k*i.rep.n,i.rep.u);if(d>hi||(i.rep.until&&d>i.rep.until))break;if(d>=lo)o.push({...i,date:d,done:(i.dd||[]).includes(d)})}}
+  return o.sort(sort)}
+function card(i){let w='';
+  if(i.type=='todo'&&!i.done){const x=days(i.date,T);w=x<0?`seit ${-x} Tg. überfällig`:x==0?'heute fällig':x==1?'morgen fällig':`fällig in ${x} Tagen`}
+  return `<div class="card ${i.done?'done':''}"><button class="chk" onclick="tg('${i.id}','${i.date}')">${i.done?'✓':''}</button>
+  <div class="body"><div class="t">${esc(i.title)}</div><div class="m">${i.type=='todo'?`<span class="tag ${i.flex?'f':''}">${i.flex?'Meine Deadline':'Aufgabe'}</span>`:''}${i.rep?'🔁 ':''}${i.time?i.time+' Uhr ':''}${w?`<b>${w}</b>`:''}${i.note?'<br>'+esc(i.note):''}</div></div>
+  <button class="ico" onclick="ex('${i.id}')">📅</button><button class="ico" onclick="rm('${i.id}')">🗑</button></div>`}
+function rc(r){const dd=days(add(r.last,r.n,r.u),T),ag=days(T,r.last);
+  return `<div class="card"><div class="body"><div class="t">${esc(r.name)}</div><div class="m">Zuletzt: ${ag==0?'heute':ag==1?'gestern':'vor '+ag+' Tagen'} · alle ${r.n} ${UN[r.u]}</div><div class="m ${dd<=0?'w':'g'}">${dd<0?'seit '+-dd+' Tg. fällig':dd==0?'heute fällig':'fällig in '+dd+' Tg.'}</div></div>
+  <button class="ico" onclick="rd('${r.id}')">✅</button><button class="ico" onclick="rr('${r.id}')">🗑</button></div>`}
+const sec=(t,l,c)=>l.length?`<h2 class="${c||''}">${t}</h2>`+l.join(''):'';
+function byDay(l){let o='',c='';for(const i of l){if(i.date!=c){c=i.date;o+=`<h2 class="${c<T?'late':''}">${lbl(c)}</h2>`}o+=card(i)}return o}
+const due=r=>add(r.last,r.n,r.u);
+function render(){
+  const n=new Date();T=iso(n);
+  $('#dt').textContent=n.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+  const h=n.getHours();$('#hi').textContent=h<11?'Guten Morgen ☀️':h<18?'Hallo 👋':'Guten Abend 🌙';
+  const all=inst(T,add(T,60,'d')),past=inst(add(T,-7,'d'),T);
+  const od=past.filter(i=>i.type=='todo'&&!i.done&&i.date<T),td=all.filter(i=>i.date==T),rd_=rts.filter(r=>due(r)<=T).sort((a,b)=>due(a).localeCompare(due(b)));
+  const open=od.length+td.filter(i=>!i.done).length+rd_.length;
+  $('#pg').style.width=(td.length?td.filter(i=>i.done).length/td.length*100:0)+'%';
+  $('#ps').textContent=open?`${open} ${open==1?'Punkt':'Punkte'} offen`:'Alles erledigt – gönn dir was! 🎉';
+  try{navigator.setAppBadge&&(open?navigator.setAppBadge(open):navigator.clearAppBadge())}catch(e){}
+  const fl=l=>only?l.filter(i=>!i.done):l;
+  const chip=`<div class="chips"><button class="chip ${only?'on':''}" onclick="only=!only;render()">Nur offene</button></div>`;
+  let o='';
+  if(tab=='heute'){const seen={};
+    const up=all.filter(i=>i.type=='todo'&&!i.done&&i.date>T&&!seen[i.id]&&(seen[i.id]=1));
+    o=sec('Überfällig',od.map(card),'late')+sec('Heute',td.map(card))+sec('Routinen fällig',rd_.map(rc))+sec('Anstehende Aufgaben',up.map(card))}
+  else if(tab=='routinen')o=rts.length?[...rts].sort((a,b)=>due(a).localeCompare(due(b))).map(rc).join(''):'<div class="empty">Noch keine Routinen.<br>Tippe auf + und wähle „Routine“, z. B. Bettwäsche wechseln.</div>';
+  else{let l;
+    if(tab=='alle')l=all;else if(tab=='termine')l=all.filter(i=>i.type=='event');else l=inst(add(T,-7,'d'),add(T,60,'d')).filter(i=>i.type=='todo');
+    l=fl(l);o=chip+byDay(l);
+    if(tab=='alle'&&items.length)o+='<button class="go" style="margin-top:16px" onclick="exAll()">Alle Termine in Kalender exportieren</button>'}
+  if(!o||o==chip)o=(tab=='heute'?'':chip)+'<div class="empty">Nichts zu sehen.<br>Tippe auf + um etwas anzulegen.</div>';
+  $('#main').innerHTML=o}
+function tg(id,d){const i=items.find(x=>x.id==id);if(i.rep){i.dd=i.dd||[];const k=i.dd.indexOf(d);k<0?i.dd.push(d):i.dd.splice(k,1)}else i.done=!i.done;save()}
+const rm=id=>{const i=items.find(x=>x.id==id);if(confirm(i.rep?'Ganze Wiederholungsserie löschen?':'Löschen?')){items=items.filter(x=>x.id!=id);save()}};
+const rr=id=>{if(confirm('Routine löschen?')){rts=rts.filter(x=>x.id!=id);save()}};
+const rd=id=>{rts.find(x=>x.id==id).last=iso(new Date());save()};
+function ics(list){
+  const p=n=>String(n).padStart(2,'0'),e=s=>(s||'').replace(/[\\;,]/g,'\\$&').replace(/\n/g,'\\n');
+  const st=new Date().toISOString().replace(/[-:]|\.\d+/g,'');
+  let o='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Tagwerk//DE\r\n';
+  for(const i of list){
+    const d=i.date.replace(/-/g,'');let s,en;
+    if(i.time){const x=new Date(i.date+'T'+i.time);x.setHours(x.getHours()+1);
+      s='DTSTART:'+d+'T'+i.time.replace(':','')+'00';en='DTEND:'+iso(x).replace(/-/g,'')+'T'+p(x.getHours())+p(x.getMinutes())+'00'}
+    else{const x=new Date(i.date+'T12:00');x.setDate(x.getDate()+1);s='DTSTART;VALUE=DATE:'+d;en='DTEND;VALUE=DATE:'+iso(x).replace(/-/g,'')}
+    const rl=i.rep?`RRULE:FREQ=${{d:'DAILY',w:'WEEKLY',m:'MONTHLY'}[i.rep.u]};INTERVAL=${i.rep.n}${i.rep.until?';UNTIL='+i.rep.until.replace(/-/g,''):''}\r\n`:'';
+    o+=`BEGIN:VEVENT\r\nUID:${i.id}@tagwerk\r\nDTSTAMP:${st}\r\nSUMMARY:${e(i.title)}\r\nDESCRIPTION:${e(i.note)}\r\n${s}\r\n${en}\r\n${rl}BEGIN:VALARM\r\nTRIGGER:-PT15M\r\nACTION:DISPLAY\r\nDESCRIPTION:Erinnerung\r\nEND:VALARM\r\nEND:VEVENT\r\n`}
+  return o+'END:VCALENDAR\r\n'}
+async function dl(list,name){
+  const f=new File([ics(list)],name+'.ics',{type:'text/calendar'});
+  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e.name=='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click()}
+const ex=id=>dl([items.find(x=>x.id==id)],'termin');
+const exAll=()=>dl(items.filter(i=>i.rep||(!i.done&&i.date>=iso(new Date()))),'tagwerk');
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x==b));render();scrollTo(0,0)});
+const f=$('#f');
+function typ(){const t=f.type.value,r=t=='routine';$('#flx').hidden=t!='todo';$('#rp').hidden=r;$('#rt').hidden=!r;$('#nt').hidden=r;$('#tm').hidden=r;$('#dl').textContent=r?'Zuletzt gemacht am':'Datum'}
+f.querySelectorAll('[name=type]').forEach(r=>r.onchange=typ);
+f.ru.onchange=()=>{$('#rx').hidden=$('#rxh').hidden=!f.ru.value};
+$('#add').onclick=()=>{f.reset();f.date.value=iso(new Date());typ();f.ru.onchange();$('#sheet').classList.add('open')};
+$('#sheet').onclick=e=>{if(e.target.id=='sheet')$('#sheet').classList.remove('open')};
+f.onsubmit=e=>{e.preventDefault();const ty=f.type.value,id=Date.now().toString(36),t=f.title.value.trim();
+  if(ty=='routine')rts.push({id,name:t,last:f.date.value,n:+f.n2.value||1,u:f.u2.value});
+  else items.push({id,type:ty,title:t,date:f.date.value,time:f.time.value,flex:ty=='todo'&&f.flex.checked,note:f.note.value.trim(),done:false,dd:[],rep:f.ru.value?{n:+f.n.value||1,u:f.ru.value,until:f.until.value}:null});
+  $('#sheet').classList.remove('open');save()};
+document.addEventListener('visibilitychange',render);
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+render();
+</script></body></html>
